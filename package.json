@@ -15,15 +15,21 @@
   },
   "dependencies": {
     "axios": "^1.5.1",
+    "dotenv": "^16.4.7",
     "fs-extra": "^11.1.1",
-    "yargs": "^17.7.2",
-    "dotenv": "^16.4.7"
+    "yargs": "^17.7.2"
   },
-  "keywords": ["gitlab", "downloader", "cli", "npx"],
+  "keywords": [
+    "gitlab",
+    "downloader",
+    "cli",
+    "npx"
+  ],
   "author": "Russ Balabanov",
   "license": "MIT",
   "main": "index.js",
   "devDependencies": {
-    "@types/node": "^22.13.4"
+    "@types/node": "^22.13.4",
+    "prettier": "^3.5.1"
   }
 }
