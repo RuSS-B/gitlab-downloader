@@ -67,10 +67,7 @@ async function fetchTree(folderPath = '') {
     });
     return response.data; // Returns a list of files and directories
   } catch (error) {
-    console.error(
-      `Failed to fetch tree for ${folderPath}:`,
-      error.response?.data || error.message,
-    );
+    console.error(`Failed to fetch tree for ${folderPath}:`, error.response?.data || error.message);
     return [];
   }
 }
@@ -87,51 +84,43 @@ async function downloadFile(filePath) {
     });
     const localPath = path.join(process.cwd(), DOWNLOAD_DIR, filePath);
     await fs.outputFile(localPath, response.data);
-    console.log(`Downloaded: ${localPath}`);
+    console.debug(`Downloaded: ${localPath}`);
   } catch (error) {
-    console.error(
-      `Failed to download ${filePath}:`,
-      error.response?.data || error.message,
-    );
+    console.error(`Failed to download ${filePath}:`, error.response?.data || error.message);
   }
 }
 
 /**
- * Recursively download a folder
+ * Recursively download a folder (Parallelized)
  */
 async function downloadFolder(folderPath) {
   const items = await fetchTree(folderPath);
-  for (const item of items) {
+  const downloadTasks = items.map(async (item) => {
     const fullPath = folderPath ? `${folderPath}/${item.name}` : item.name;
 
-    if (
-      INCLUDE_ONLY.length > 0 &&
-      item.type === 'tree' &&
-      !INCLUDE_ONLY.some((accept) => fullPath.includes(accept))
-    ) {
+    // Include only specific folders if specified
+    if (INCLUDE_ONLY.length > 0 && item.type === 'tree' && !INCLUDE_ONLY.some((accept) => fullPath.includes(accept))) {
       console.log(`Ignoring folder: ${fullPath} (not in includeOnly list)`);
-      continue;
+      return;
     }
 
     if (item.type === 'blob') {
-      await downloadFile(fullPath);
+      return downloadFile(fullPath);
     } else if (item.type === 'tree') {
-      await downloadFolder(fullPath);
+      return downloadFolder(fullPath);
     }
-  }
+  });
+
+  await Promise.all(downloadTasks);
 }
 
 /**
  * Main function to start downloading
  */
 async function main() {
-  console.log(
-    `Starting download from project ID: ${PROJECT_ID} on branch: ${BRANCH}`,
-  );
+  console.log(`Starting download from project ID: ${PROJECT_ID} on branch: ${BRANCH}`);
   if (INCLUDE_ONLY.length > 0) {
-    console.log(
-      `Filtering: Only downloading folders that match ${INCLUDE_ONLY.join(', ')}`,
-    );
+    console.log(`Filtering: Only downloading folders that match ${INCLUDE_ONLY.join(', ')}`);
   } else {
     console.log(`No filter applied. Downloading all folders.`);
   }

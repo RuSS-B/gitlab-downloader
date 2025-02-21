@@ -15,9 +15,9 @@ npm install -g @russ-b/gitlab-downloader
 
 You can use the GitLab Downloader by running the following command:
 
-```sh
+`
 gitlab-downloader --token <your_gitlab_token> --hostUrl <gitlab_host_url> --projectId <project_id> [options]
-```
+`
 
 ### Options
 
