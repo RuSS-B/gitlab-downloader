@@ -54,6 +54,23 @@ const BRANCH = argv.branch;
 const DOWNLOAD_DIR = argv.dir;
 const FOLDERS_TO_DOWNLOAD = ['proto', 'build']; // Root folders to scan
 const INCLUDE_ONLY = argv.includeOnly ? argv.includeOnly.split(',') : [];
+const COMMIT_FILE = path.join(DOWNLOAD_DIR || process.cwd(), 'last_commit.json');
+
+/**
+ * Fetch the latest commit hash of the branch
+ */
+async function fetchLatestCommitHash() {
+  const url = `${GITLAB_HOST}/api/v4/projects/${PROJECT_ID}/repository/commits/${BRANCH}`;
+  try {
+    const response = await axios.get(url, {
+      headers: { 'PRIVATE-TOKEN': TOKEN },
+    });
+    return response.data.id; // Commit hash
+  } catch (error) {
+    console.error(`Failed to fetch latest commit:`, error.response?.data || error.message);
+    return null;
+  }
+}
 
 /**
  * Fetch the repository tree for a given path
@@ -125,9 +142,30 @@ async function main() {
     console.log(`No filter applied. Downloading all folders.`);
   }
 
+  const latestCommitHash = await fetchLatestCommitHash();
+  if (!latestCommitHash) {
+    console.error('Could not retrieve latest commit hash. Exiting.');
+    return;
+  }
+
+  let commitHash = null;
+  try {
+    const data = fs.readJsonSync(COMMIT_FILE);
+    commitHash = data?.commit;
+  } catch (e) {
+    console.warn('Could not read commit file');
+  }
+
+  if (latestCommitHash === commitHash) {
+    console.log('No changes detected in the repository. Skipping download');
+    return;
+  }
+
   for (const folder of FOLDERS_TO_DOWNLOAD) {
     await downloadFolder(folder);
   }
+
+  fs.writeJsonSync(COMMIT_FILE, { commit: latestCommitHash });
   console.log('Download complete.');
 }
 

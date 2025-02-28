@@ -1,4 +1,3 @@
-```markdown
 # GitLab Downloader
 
 GitLab Downloader is a CLI tool to download GitLab repositories with filtering options. It allows you to specify which folders to include or exclude during the download process.
@@ -8,16 +7,16 @@ GitLab Downloader is a CLI tool to download GitLab repositories with filtering o
 To install the GitLab Downloader, you can use npm:
 
 ```sh
-npm install -g @russ-b/gitlab-downloader
+npm install @russ-b/gitlab-downloader
 ```
 
 ## Usage
 
 You can use the GitLab Downloader by running the following command:
 
-`
+```sh
 gitlab-downloader --token <your_gitlab_token> --hostUrl <gitlab_host_url> --projectId <project_id> [options]
-`
+```
 
 ### Options
 
