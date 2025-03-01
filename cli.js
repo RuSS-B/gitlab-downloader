@@ -54,7 +54,8 @@ const BRANCH = argv.branch;
 const DOWNLOAD_DIR = argv.dir;
 const FOLDERS_TO_DOWNLOAD = ['proto', 'build']; // Root folders to scan
 const INCLUDE_ONLY = argv.includeOnly ? argv.includeOnly.split(',') : [];
-const COMMIT_FILE = path.join(DOWNLOAD_DIR || process.cwd(), 'last_commit.json');
+const CACHE_DIR = path.join(__dirname, '.cache');
+const COMMIT_FILE = path.join(CACHE_DIR, 'last_commit.json');
 
 /**
  * Fetch the latest commit hash of the branch
@@ -147,6 +148,8 @@ async function main() {
     console.error('Could not retrieve latest commit hash. Exiting.');
     return;
   }
+
+  fs.mkdirp(CACHE_DIR);
 
   let commitHash = null;
   try {
