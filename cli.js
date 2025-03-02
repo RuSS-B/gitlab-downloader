@@ -188,7 +188,7 @@ async function main() {
     await downloadFolder(folder);
   }
 
-  fs.writeJsonSync(COMMIT_FILE, { commit: latestCommitHash });
+  fs.writeJsonSync(COMMIT_FILE, { commit: latestCommitHash, argsHash: currentArgsHash });
   console.log('Download complete.');
 }
 
