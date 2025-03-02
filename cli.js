@@ -1,9 +1,14 @@
+#!/usr/bin/env node
+
+// Download files from a GitLab repository using the GitLab API
+
 require('dotenv').config();
 
 const axios = require('axios');
 const fs = require('fs-extra');
 const path = require('path');
 const yargs = require('yargs');
+const crypto = require('crypto');
 
 const argv = yargs
   .option('token', {
@@ -56,6 +61,20 @@ const FOLDERS_TO_DOWNLOAD = ['proto', 'build']; // Root folders to scan
 const INCLUDE_ONLY = argv.includeOnly ? argv.includeOnly.split(',') : [];
 const CACHE_DIR = path.join(__dirname, '.cache');
 const COMMIT_FILE = path.join(CACHE_DIR, 'last_commit.json');
+
+/**
+ * Generate a hash from the input arguments to detect changes.
+ */
+function generateArgsHash() {
+  const argsString = JSON.stringify({
+    PROJECT_ID,
+    BRANCH,
+    INCLUDE_ONLY,
+    DOWNLOAD_DIR,
+  });
+
+  return crypto.createHash('sha256').update(argsString).digest('hex');
+}
 
 /**
  * Fetch the latest commit hash of the branch
@@ -151,15 +170,16 @@ async function main() {
 
   fs.mkdirp(CACHE_DIR);
 
-  let commitHash = null;
+  let cachedData = {};
   try {
-    const data = fs.readJsonSync(COMMIT_FILE);
-    commitHash = data?.commit;
+    cachedData = fs.readJsonSync(COMMIT_FILE);
   } catch (e) {
-    console.warn('Could not read commit file');
+    console.warn('Could not read commit file, assuming first run.');
   }
 
-  if (latestCommitHash === commitHash) {
+  const currentArgsHash = generateArgsHash();
+  const { commit: cachedCommit, argsHash: cachedArgsHash } = cachedData;
+  if (latestCommitHash === cachedCommit && currentArgsHash === cachedArgsHash) {
     console.log('No changes detected in the repository. Skipping download');
     return;
   }
